@@ -1,10 +1,11 @@
 #include "EPaperDrive.h"
 #include "string.h"
 #include "WAVEFORM_SETTING_LUT.h"
-//#include "EPD_drive_gpio.h"
+// #include "EPD_drive_gpio.h"
 
 uint8_t UNICODEbuffer[200];
-char fontname[]="/font12";
+uint8_t EPDbuffer[400 * 300 / 8] = {0};
+char fontname[] = "/littlefs/font12";
 
 gpio_num_t CS = GPIO_NUM_5;
 gpio_num_t RST = GPIO_NUM_7;
@@ -13,131 +14,77 @@ gpio_num_t BUSY_line = GPIO_NUM_8;
 gpio_num_t CLK = GPIO_NUM_4;
 gpio_num_t DIN = GPIO_NUM_10;
 
+uint8_t fontscale = 1;
+uint8_t fontwidth = 12;
+uint8_t fontheight = 12;
+
 int xDot = 400;
 int yDot = 300;
 
-int EPD_Type=6;
+int EPD_Type = 6;
 
-int  WX29 = 0; // SSD1608
-int  WF29 = 1;
-int  OPM42 = 2; // SSD1619
-int  WF58 = 3;
-int  WF29BZ03 = 4;
-int  C154 = 5;
-int  DKE42_3COLOR = 6; // SSD1619
-int  DKE29_3COLOR = 7; // SSD1680
-int  WF42 = 8;
-int  WF32 = 9;
-int  WFT0290CZ10 = 10;    // UC8151C
-int  GDEY042Z98 = 11;     // SSD1683
-int  HINKE0266A15A0 = 12; // SSD1675
-
+int WX29 = 0; // SSD1608
+int WF29 = 1;
+int OPM42 = 2; // SSD1619
+int WF58 = 3;
+int WF29BZ03 = 4;
+int C154 = 5;
+int DKE42_3COLOR = 6; // SSD1619
+int DKE29_3COLOR = 7; // SSD1680
+int WF42 = 8;
+int WF32 = 9;
+int WFT0290CZ10 = 10;    // UC8151C
+int GDEY042Z98 = 11;     // SSD1683
+int HINKE0266A15A0 = 12; // SSD1675
 
 void EPaperDrive(gpio_num_t CS, gpio_num_t RST, gpio_num_t DC, gpio_num_t BUSY, gpio_num_t CLK, gpio_num_t DIN)
 {
 
-        gpio_config_t io_conf_output = {};
-    	io_conf_output.intr_type = GPIO_INTR_DISABLE, //不启用gpio中断
-    	io_conf_output.mode = GPIO_MODE_OUTPUT,//推挽输出模式
-    	io_conf_output.pin_bit_mask = BIT64(CS) | BIT64(DC) |BIT64(RST) |BIT64(CLK) |BIT64(DIN),//设置goio，可以同时设置多个
-    	io_conf_output.pull_down_en = GPIO_PULLDOWN_DISABLE,// 不下拉
-    	io_conf_output.pull_up_en = GPIO_PULLUP_DISABLE,// 不上拉
+    gpio_config_t io_conf_output = {};
+    io_conf_output.intr_type = GPIO_INTR_DISABLE,                                                   // 不启用gpio中断
+        io_conf_output.mode = GPIO_MODE_OUTPUT,                                                     // 推挽输出模式
+        io_conf_output.pin_bit_mask = BIT64(CS) | BIT64(DC) | BIT64(RST) | BIT64(CLK) | BIT64(DIN), // 设置goio，可以同时设置多个
+        io_conf_output.pull_down_en = GPIO_PULLDOWN_DISABLE,                                        // 不下拉
+        io_conf_output.pull_up_en = GPIO_PULLUP_DISABLE,                                            // 不上拉
         gpio_config(&io_conf_output);
 
-        io_conf_output.intr_type = GPIO_INTR_DISABLE, //不启用gpio中断
-    	io_conf_output.mode = GPIO_MODE_INPUT,//推挽输出模式
-    	io_conf_output.pin_bit_mask = BIT64(BUSY),//设置goio，可以同时设置多个
-    	io_conf_output.pull_down_en = GPIO_PULLDOWN_DISABLE,// 不下拉
-    	io_conf_output.pull_up_en = GPIO_PULLUP_DISABLE,// 不上拉
+    io_conf_output.intr_type = GPIO_INTR_DISABLE,            // 不启用gpio中断
+        io_conf_output.mode = GPIO_MODE_INPUT,               // 推挽输出模式
+        io_conf_output.pin_bit_mask = BIT64(BUSY),           // 设置goio，可以同时设置多个
+        io_conf_output.pull_down_en = GPIO_PULLDOWN_DISABLE, // 不下拉
+        io_conf_output.pull_up_en = GPIO_PULLUP_DISABLE,     // 不上拉
         gpio_config(&io_conf_output);
 
-        gpio_set_level(RST, 1);
+    gpio_set_level(RST, 1);
 
-    
     printf("GPIO_init\n");
 }
 
-
- void driver_delay_xms(unsigned long xms)
+void driver_delay_xms(unsigned long xms)
 {
     vTaskDelay(1 / portTICK_PERIOD_MS);
 }
 
-
-
- void SPI_Write(uint8_t value)
+void SPI_Write(uint8_t value)
 {
 
-        EPD_CLK_0;
-        // delayMicroseconds(1);
-        for (int i = 0; i < 8; i++)
-        {
-            //高位在前发送方式    根据升级器件特性定
-            if ((value & 0x80) == 0x80)
-                EPD_DIN_1;
-            else
-                EPD_DIN_0;
-            // delayMicroseconds(1);      //等待数据稳定  根据实际时钟调整
-            EPD_CLK_1; //上升沿发送数据
-            // delayMicroseconds(1);//CLK高电平保持一段时间 这个可以不需要 根据具体的spi时钟来确定
-            EPD_CLK_0;          //把时钟拉低实现为下一次上升沿发送数据做准备
-            value = value << 1; //发送数据的位向前移动一位
-        }
-    
-}
-
- void SetFont(enum FONT fontindex)
-{
-    FontIndex = fontindex;
-    switch (fontindex)
+    EPD_CLK_0;
+    // delayMicroseconds(1);
+    for (int i = 0; i < 8; i++)
     {
-    case 0:
-        strcpy(fontname,"/font16");
-        fontwidth = 16;
-        fontheight = 16;
-        break;
-    case 1:
-        strcpy(fontname,"/font32");
-        fontwidth = 32;
-        fontheight = 32;
-        break;
-    case 2:
-        strcpy(fontname,"/font10");
-        fontwidth = 10;
-        fontheight = 10;
-        break;
-    case 3:
-        strcpy(fontname,"/font12");
-        fontwidth = 12;
-        fontheight = 12;
-        break;
-    case 5:
-        strcpy(fontname,"/font50");
-        fontwidth = 70;
-        fontheight = 70;
-        break;
-    // case 6:
-    //     strcpy(fontname,"/font12num");
-    //     fontwidth = 12;
-    //     fontheight = 12;
-    //     break;
-    // case 7:
-    //     strcpy(fontname,"/font24");
-    //     fontwidth = 24;
-    //     fontheight = 24;
-    //     break;
-    // case 8:
-    //     strcpy(fontname,"/font8");
-    //     fontwidth = 8;
-    //     fontheight = 8;
-    //     break;
-    // case 9:
-    //     strcpy(fontname,"/font100num");
-    //     fontwidth = 100;
-    //     fontheight = 100;
-    //     break;
+        // 高位在前发送方式    根据升级器件特性定
+        if ((value & 0x80) == 0x80)
+            EPD_DIN_1;
+        else
+            EPD_DIN_0;
+        // delayMicroseconds(1);      //等待数据稳定  根据实际时钟调整
+        EPD_CLK_1; // 上升沿发送数据
+        // delayMicroseconds(1);//CLK高电平保持一段时间 这个可以不需要 根据具体的spi时钟来确定
+        EPD_CLK_0;          // 把时钟拉低实现为下一次上升沿发送数据做准备
+        value = value << 1; // 发送数据的位向前移动一位
     }
 }
+
 /*
 void DrawCircle(int x, int y, int r, bool fill)
 {
@@ -162,7 +109,7 @@ void DrawCircle(int x, int y, int r, bool fill)
 }
 */
 
- void DrawBox(uint8_t x, int y, int w, int h)
+void DrawBox(uint8_t x, int y, int w, int h)
 {
 
     for (int i = x; i < x + h; i++)
@@ -170,7 +117,7 @@ void DrawCircle(int x, int y, int r, bool fill)
         DrawXline(y, y + w - 1, i);
     }
 }
- void DrawEmptyBox(int x, int y, int w, int h)
+void DrawEmptyBox(int x, int y, int w, int h)
 {
     DrawXline(y, y + w, x);
     DrawXline(y, y + w, x + h);
@@ -239,7 +186,7 @@ void DrawChart(int x, int y, int w, int c1, int c2, int c3, int c4, int c5, int 
     DrawUTF(x + 62, y + 41 + percent, char *(c6));
 }
 */
- void DrawCircleChart(int x, int y, int r, int w, int c1, int c2, int c3)
+void DrawCircleChart(int x, int y, int r, int w, int c1, int c2, int c3)
 {
     // int sum = c1 + c2 + c3;
     // if (sum == 0)
@@ -303,33 +250,33 @@ void DrawChart(int x, int y, int w, int c1, int c2, int c3, int c4, int c5, int 
     // SetFont(FONT12);
     // DrawUTF(x - r + 26, y + r + 12 + 30, char *(c3));
 }
- int getIcon(int weathercodeindex)
+int getIcon(int weathercodeindex)
 {
     if (weathercodeindex == 0)
-        return 12;  //晴
+        return 12; // 晴
     if (weathercodeindex == 1)
-        return 58;  //多云
+        return 58; // 多云
     if (weathercodeindex == 2)
-        return 58;  //少云
+        return 58; // 少云
     if (weathercodeindex == 3)
-        return 58;  //晴间多云
+        return 58; // 晴间多云
     if (weathercodeindex == 4)
-        return 54;  //阴
+        return 54; // 阴
     if (weathercodeindex >= 5 && weathercodeindex <= 18)
         return 0;
     if (weathercodeindex >= 19 && weathercodeindex <= 32)
-        return 19; //雨
+        return 19; // 雨
     if (weathercodeindex >= 33 && weathercodeindex <= 36)
-        return 16; //雪
+        return 16; // 雪
     if (weathercodeindex >= 37 && weathercodeindex <= 40)
-        return 16; //雪(雨夹雪)
+        return 16; // 雪(雨夹雪)
     if (weathercodeindex == 41)
-        return 37;  //雾(薄雾)
+        return 37; // 雾(薄雾)
     if (weathercodeindex == 42)
-        return 37;  //雾
+        return 37; // 雾
     if (weathercodeindex == 43)
-        return 37;  //雾(霾)
-    return 17;  //阵雨夹雪
+        return 37; // 雾(霾)
+    return 17;     // 阵雨夹雪
 }
 /*
 void DrawWeatherChart(int xmin, int xmax, int ymin, int ymax, int point_n, int show_n, char * tmax, char * tmin, char * code_d, char * code_n, char * text_d, char * text_n, char * date, char * week) //绘制天气温度变化曲线
@@ -504,14 +451,14 @@ void DrawWeatherChart(int xmin, int xmax, int ymin, int ymax, int point_n, int s
         Inverse(xmin - 83, xmin - 69, 0, 400);
 }
 */
- void DrawXline(int start, int end, int x)
+void DrawXline(int start, int end, int x)
 {
     for (int i = start; i <= end; i++)
     {
         SetPixel(x, i);
     }
 }
- void DrawYline(int start, int end, int y)
+void DrawYline(int start, int end, int y)
 {
     for (int i = start; i <= end; i++)
     {
@@ -562,7 +509,7 @@ void DrawLine(int xstart, int ystart, int xend, int yend)
 }
 */
 
- void Inverse(int xStart, int xEnd, int yStart, int yEnd)
+void Inverse(int xStart, int xEnd, int yStart, int yEnd)
 {
     for (int i = 0; i < (xEnd - xStart); i++)
     {
@@ -573,13 +520,13 @@ void DrawLine(int xstart, int ystart, int xend, int yend)
     }
 }
 
- void DrawUTF_wh(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_t *code)
+void DrawUTF_wh(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_t *code)
 {
     int charcount;
     charcount = UTFtoUNICODE((uint8_t *)code);
     DrawUnicodeStr(x, y, width, height, charcount, (uint8_t *)UNICODEbuffer);
 }
- void DrawUTF(int16_t x, int16_t y, char * code)
+void DrawUTF(int16_t x, int16_t y, char *code)
 {
     // char * buffer=code;
     // code.toCharArray(buffer, 200);
@@ -634,7 +581,7 @@ int UTFtoUNICODE(uint8_t *code)
     UNICODEbuffer[charcount * 2] = '\0';
     return charcount;
 }
- void DrawUnicodeChar(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_t *code)
+void DrawUnicodeChar(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_t *code)
 {
 
     int offset;
@@ -644,11 +591,19 @@ int UTFtoUNICODE(uint8_t *code)
     else
         sizeofsinglechar = (height / 8 + 1) * width;
     offset = (code[0] * 0x100 + code[1]) * sizeofsinglechar;
-
+    // TODO
     FILE *f = fopen(fontname, "r");
-    fseek(f,offset,SEEK_SET);
+    if (f == NULL)
+    {
+        printf("Failed to open file for writing\n");
+        return;
+    }
+    fseek(f, offset, SEEK_SET);
     char zi[sizeofsinglechar];
-    fread(zi,sizeofsinglechar,1,f);
+    fread(zi, sizeofsinglechar, 1, f);
+    fclose(f);
+    // printf("read_over\n");
+    // printf("zi 偏移 %d,为%d\n", offset, zi[sizeofsinglechar]);
 
     if (offset < 0xff * sizeofsinglechar && FontIndex < 10)
     {
@@ -662,12 +617,12 @@ int UTFtoUNICODE(uint8_t *code)
     // SPIFFS.end();
 }
 
- void DrawUnicodeStr(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_t strlength, uint8_t *code)
+void DrawUnicodeStr(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_t strlength, uint8_t *code)
 {
     int ymax = yDot;
 
-        ymax = xDot;
-
+    ymax = xDot;
+    printf("start_Draw_Unicode_str\n");
 
     CurrentCursor = 0;
     uint8_t sizeofsinglechar;
@@ -732,10 +687,11 @@ int UTFtoUNICODE(uint8_t *code)
         i++;
     }
 }
- void drawXbm(int16_t xMove, int16_t yMove, int16_t width, int16_t height, uint8_t *xbm)
+void drawXbm(int16_t xMove, int16_t yMove, int16_t width, int16_t height, uint8_t *xbm)
 {
+    // TODO
     int16_t heightInXbm = (height + 7) / 8;
-    uint8_t Data=0;
+    uint8_t Data = 0;
     for (int16_t x = 0; x < width; x++)
     {
         for (int16_t y = 0; y < height; y++)
@@ -754,6 +710,7 @@ int UTFtoUNICODE(uint8_t *code)
                 if (fontscale == 1)
                 {
                     SetPixel(xMove + y, yMove + x);
+                    printf("写字开始\n");
                     CurrentCursor = x;
                 }
                 if (fontscale == 2)
@@ -770,10 +727,10 @@ int UTFtoUNICODE(uint8_t *code)
     }
 }
 
- void DrawXbm_P(int16_t xMove, int16_t yMove, int16_t width, int16_t height, const uint8_t *xbm)
+void DrawXbm_P(int16_t xMove, int16_t yMove, int16_t width, int16_t height, const uint8_t *xbm)
 {
     int16_t heightInXbm = (height + 7) / 8;
-    uint8_t Data =0;
+    uint8_t Data = 0;
     // uint8_t temp[heightInXbm*width];
     // memcpy_P(temp, xbm, heightInXbm*width);
 
@@ -787,7 +744,7 @@ int UTFtoUNICODE(uint8_t *code)
             }
             else
             { // Read new Data every 8 bit
-                Data = *( (char *) (xbm + (y / 8) + x * heightInXbm));
+                Data = *((char *)(xbm + (y / 8) + x * heightInXbm));
             }
             // if there is a bit draw it
             if (((Data & 0x80) >> 7))
@@ -808,10 +765,10 @@ int UTFtoUNICODE(uint8_t *code)
         }
     }
 }
- void DrawXbm_p_gray(int16_t xMove, int16_t yMove, int16_t width, int16_t height, const uint8_t *xbm, uint8_t level)
+void DrawXbm_p_gray(int16_t xMove, int16_t yMove, int16_t width, int16_t height, const uint8_t *xbm, uint8_t level)
 {
     int16_t heightInXbm = (height + 1) / 2;
-    uint8_t Data=0;
+    uint8_t Data = 0;
 
     for (int16_t x = 0; x < width; x++)
     {
@@ -823,7 +780,7 @@ int UTFtoUNICODE(uint8_t *code)
             }
             else
             { // Read new Data every 8 bit
-                Data = *( (char *) (xbm + (y / 2) + x * heightInXbm));
+                Data = *((char *)(xbm + (y / 2) + x * heightInXbm));
             }
             // if there is a bit draw it
             if (((Data & 0xf0) >> 4 == level))
@@ -834,13 +791,13 @@ int UTFtoUNICODE(uint8_t *code)
         }
     }
 }
- void DrawXbm_spiff_gray(int16_t xMove, int16_t yMove, int16_t width, int16_t height, uint8_t level)
+void DrawXbm_spiff_gray(int16_t xMove, int16_t yMove, int16_t width, int16_t height, uint8_t level)
 {
 
     FILE *f = fopen("/pic.xbm", "r");
 
     int16_t heightInXbm = (height + 1) / 2;
-    uint8_t Data=0;
+    uint8_t Data = 0;
 
     for (int16_t x = 0; x < width; x++)
     {
@@ -864,30 +821,25 @@ int UTFtoUNICODE(uint8_t *code)
     }
     fclose(f);
 }
- void SetPixel(int16_t x, int16_t y)
+void SetPixel(int16_t x, int16_t y)
 {
 
-
-        int16_t temp = x;
-        x = y;
-        y = yDot - 1 - temp;
-        if (x < xDot && y < yDot)
-            EPDbuffer[x / 8 + y * xDot / 8] &= ~(0x80 >> x % 8);
-
+    int16_t temp = x;
+    x = y;
+    y = yDot - 1 - temp;
+    if (x < xDot && y < yDot)
+        EPDbuffer[x / 8 + y * xDot / 8] &= ~(0x80 >> x % 8);
 }
- void InversePixel(int16_t x, int16_t y)
+void InversePixel(int16_t x, int16_t y)
 {
 
-
-        int16_t temp = x;
-        x = y;
-        y = yDot - 1 - temp;
-        if (x < xDot && y < yDot)
-            EPDbuffer[x / 8 + y * xDot / 8] ^= (0x80 >> x % 8);
-
-
+    int16_t temp = x;
+    x = y;
+    y = yDot - 1 - temp;
+    if (x < xDot && y < yDot)
+        EPDbuffer[x / 8 + y * xDot / 8] ^= (0x80 >> x % 8);
 }
- void clearbuffer()
+void clearbuffer()
 {
 
     if (EPD_Type == WF29BZ03)
@@ -1020,12 +972,9 @@ void EPD_Write(uint8_t *value, uint8_t Datalen)
 
     ReadBusy();
 
-
-    //TODO
     EPD_CS_0;
-    EPD_DC_0;          // When DC is 0, write command
-    printf("EPD_DC_0");
-    
+    EPD_DC_0; // When DC is 0, write command
+
     SPI_Write(*ptemp); // The first uint8_t is written with the command value
     ptemp++;
     EPD_DC_1; // When DC is 1, write Data
@@ -1036,66 +985,19 @@ void EPD_Write(uint8_t *value, uint8_t Datalen)
     }
     ReadBusy();
     EPD_CS_1;
-
 }
 
 void EPD_WriteDispRam(unsigned int XSize, unsigned int YSize, uint8_t *Dispbuff, unsigned int offset, uint8_t label)
 {
 
     int i = 0, j = 0;
-    if (EPD_Type == WF29BZ03)
-    {
-        EPD_WriteCMD(0x10);
-        EPD_CS_0;
-        EPD_DC_1;
-        /* for(i=0;i<(YSize*2);i++){
-    for(j=0;j<(XSize*2);j++){
-      SPI_Write(*Dispbuff);
-      Dispbuff++;
-    }
-  } */
-        if (label != 1)
-        {
-            for (i = 0; i < (YSize * 2); i++)
-            {
-                for (j = 0; j < (XSize * 2); j++)
-                {
-                    SPI_Write(label);
-                }
-            }
-        }
-        else
-        {
-            Dispbuff += offset;
-            for (i = 0; i < (YSize * 2); i++)
-            {
-                for (j = 0; j < (XSize * 2); j++)
-                {
-                    SPI_Write(*Dispbuff);
-                    Dispbuff++;
-                }
-            }
-        }
-        EPD_CS_1;
-        return;
-    }
 
-    if (EPD_Type == WX29 || EPD_Type == OPM42 || EPD_Type == DKE42_3COLOR || EPD_Type == DKE29_3COLOR || EPD_Type == GDEY042Z98 || EPD_Type == HINKE0266A15A0)
-    {
         ReadBusy();
         EPD_DC_0; // command write
         EPD_CS_0;
         SPI_Write(0x24);
-    }
 
-    if (EPD_Type == WF29 || EPD_Type == WF58 || EPD_Type == C154 || EPD_Type == WF42 || EPD_Type == WFT0290CZ10)
-    {
-        EPD_CS_0;
-        EPD_DC_0; // command write
-        SPI_Write(0x13);
-    }
     EPD_DC_1; // Data write
-    // Serial.printf("Xsize=%dYsize=%d\r\n",XSize,YSize);
 
     if (label != 1)
     {
@@ -1282,7 +1184,7 @@ void EPD_WriteDispRam_Old(unsigned int XSize, unsigned int YSize, uint8_t *Dispb
 }
 
 void EPD_SetRamArea(uint16_t Xstart, uint16_t Xend,
-                                 uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)
+                    uint8_t Ystart, uint8_t Ystart1, uint8_t Yend, uint8_t Yend1)
 {
     if (EPD_Type == WX29 || EPD_Type == OPM42 || EPD_Type == DKE42_3COLOR || EPD_Type == DKE29_3COLOR || EPD_Type == GDEY042Z98 || EPD_Type == HINKE0266A15A0)
     {
@@ -1364,52 +1266,51 @@ void EPD_SetRamPointer(uint16_t addrX, uint8_t addrY, uint8_t addrY1)
 
 void EPD_Init(void)
 {
-    printf("初始化中..type=%d\n",EPD_Type);
+    printf("初始化中..type=%d\n", EPD_Type);
     EPD_RST_0;
     driver_delay_xms(10);
     EPD_RST_1;
 
-        printf("初始化DKE42_3COLOR\n");
-        EPD_WriteCMD(0x74);  //
-        EPD_WriteData(0x54); //
-        EPD_WriteCMD(0x7E);  //
-        EPD_WriteData(0x3B); //
-        EPD_WriteCMD(0x01);  //
-        EPD_WriteData(0x2B); //
-        EPD_WriteData(0x01);
-        EPD_WriteData(0x00); //
+    printf("初始化DKE42_3COLOR\n");
+    EPD_WriteCMD(0x74);  //
+    EPD_WriteData(0x54); //
+    EPD_WriteCMD(0x7E);  //
+    EPD_WriteData(0x3B); //
+    EPD_WriteCMD(0x01);  //
+    EPD_WriteData(0x2B); //
+    EPD_WriteData(0x01);
+    EPD_WriteData(0x00); //
 
-        EPD_WriteCMD(0x0C);  //
-        EPD_WriteData(0x8B); //
-        EPD_WriteData(0x9C); //
-        EPD_WriteData(0xD6); //
-        EPD_WriteData(0x0F); //
+    EPD_WriteCMD(0x0C);  //
+    EPD_WriteData(0x8B); //
+    EPD_WriteData(0x9C); //
+    EPD_WriteData(0xD6); //
+    EPD_WriteData(0x0F); //
 
-        EPD_WriteCMD(0x3A);  //
-        EPD_WriteData(0x21); //
-        EPD_WriteCMD(0x3B);  //
-        EPD_WriteData(0x06); //
-        EPD_WriteCMD(0x3C);  //
-        EPD_WriteData(0x03); //
+    EPD_WriteCMD(0x3A);  //
+    EPD_WriteData(0x21); //
+    EPD_WriteCMD(0x3B);  //
+    EPD_WriteData(0x06); //
+    EPD_WriteCMD(0x3C);  //
+    EPD_WriteData(0x03); //
 
-        EPD_WriteCMD(0x11);  // data enter mode
-        EPD_WriteData(0x01); // 01 –Y decrement, X increment,
+    EPD_WriteCMD(0x11);  // data enter mode
+    EPD_WriteData(0x01); // 01 –Y decrement, X increment,
 
-        EPD_WriteCMD(0x2C);  //
-        EPD_WriteData(0x00); // fff
+    EPD_WriteCMD(0x2C);  //
+    EPD_WriteData(0x00); // fff
 
-        EPD_WriteCMD(0x37);  //
-        EPD_WriteData(0x00); //
-        EPD_WriteData(0x00); //
-        EPD_WriteData(0x00); //
-        EPD_WriteData(0x00); //
-        EPD_WriteData(0x80); //
+    EPD_WriteCMD(0x37);  //
+    EPD_WriteData(0x00); //
+    EPD_WriteData(0x00); //
+    EPD_WriteData(0x00); //
+    EPD_WriteData(0x00); //
+    EPD_WriteData(0x80); //
 
-        EPD_WriteCMD(0x21);  //
-        EPD_WriteData(0x40); //
-        EPD_WriteCMD(0x22);
-        EPD_WriteData(0xc7); // c5forgraymode//
-
+    EPD_WriteCMD(0x21);  //
+    EPD_WriteData(0x40); //
+    EPD_WriteCMD(0x22);
+    EPD_WriteData(0xc7); // c5forgraymode//
 }
 void EPD_Set_Contrast(uint8_t vcom)
 {
@@ -1459,38 +1360,7 @@ void EPD_Update(void)
 }
 void EPD_Update_Part(void)
 {
-    if (EPD_Type == DKE29_3COLOR)
-    {
-        EPD_WriteCMD(0x22); // Display Update Control
-        EPD_WriteData(0xff);
-        EPD_WriteCMD(0x20); // Activate Display Update Sequence
-    }
-    else if (EPD_Type == OPM42 || EPD_Type == DKE42_3COLOR)
-    {
         EPD_WriteCMD(0x20);
-    }
-    else if (EPD_Type == WX29)
-    {
-        EPD_WriteCMD_p1(0x22, 0x04);
-        EPD_WriteCMD(0x20);
-    }
-    else if (EPD_Type == WF29 || EPD_Type == WF42)
-    {
-        EPD_WriteCMD(0x92);
-        EPD_WriteCMD(0x12);
-    }
-    else if (EPD_Type == WFT0290CZ10)
-    {
-        EPD_WriteCMD(0x91);
-        EPD_WriteCMD(0x12);
-        // ReadBusy();
-    }
-    else if (EPD_Type == GDEY042Z98 || EPD_Type == HINKE0266A15A0)
-    {
-        EPD_WriteCMD(0x22); // Display Update Control
-        EPD_WriteData(0xFF);
-        EPD_WriteCMD(0x20); // Activate Display Update Sequence
-    }
 }
 
 void EPD_init_Full(void)
@@ -1501,19 +1371,15 @@ void EPD_init_Full(void)
 #endif
 
     EPD_Write((uint8_t *)LUTDefault_full_dke42, sizeof(LUTDefault_full_dke42));
-
-    
 }
 
 void EPD_init_Part(void)
 {
 
-        EPD_Init();
-        EPD_WriteCMD(0x21);
-        EPD_WriteData(0x00);
-        EPD_Write((uint8_t *)LUTDefault_part_dke42, sizeof(LUTDefault_part_dke42));
-
-
+    EPD_Init();
+    EPD_WriteCMD(0x21);
+    EPD_WriteData(0x00);
+    EPD_Write((uint8_t *)LUTDefault_part_dke42, sizeof(LUTDefault_part_dke42));
 }
 
 void EPD_Transfer_Full_BW(uint8_t *DisBuffer, uint8_t Label)
@@ -1624,119 +1490,55 @@ void EPD_Transfer_Full_RED(uint8_t *DisBuffer, uint8_t Label)
 void EPD_Dis_Full(uint8_t *DisBuffer, uint8_t Label)
 {
     // int nowtime = millis();
-    if (EPD_Type == WX29 || EPD_Type == OPM42 || EPD_Type == DKE42_3COLOR || EPD_Type == DKE29_3COLOR || EPD_Type == GDEY042Z98 || EPD_Type == HINKE0266A15A0)
+
+    unsigned int yStart = 0;
+    unsigned int yEnd = yDot - 1;
+    unsigned int xStart = 0;
+    unsigned int xEnd = xDot - 1;
+    unsigned long temp = yStart;
+
+    yStart = yDot - 1 - yEnd;
+    yEnd = yDot - 1 - temp;
+
+    EPD_SetRamPointer(xStart / 8, yEnd % 256, yEnd / 256);
+    EPD_SetRamArea(xStart, xEnd, yEnd % 256, yEnd / 256, yStart % 256, yStart / 256);
+
+    if (Label == 2)
     {
-        unsigned int yStart = 0;
-        unsigned int yEnd = yDot - 1;
-        unsigned int xStart = 0;
-        unsigned int xEnd = xDot - 1;
-        unsigned long temp = yStart;
-
-        yStart = yDot - 1 - yEnd;
-        yEnd = yDot - 1 - temp;
-
-        EPD_SetRamPointer(xStart / 8, yEnd % 256, yEnd / 256);
-        EPD_SetRamArea(xStart, xEnd, yEnd % 256, yEnd / 256, yStart % 256, yStart / 256);
-
-        if (EPD_Type == GDEY042Z98 || EPD_Type == HINKE0266A15A0)
-        {
-            EPD_Transfer_Full_RED((uint8_t *)DisBuffer, 2);
-        }
-
-        if (Label == 2)
-        {
-            EPD_WriteDispRam(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 0x00); // white
-        }
-        else if (Label == 3)
-        {
-            EPD_WriteDispRam(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 0xff); // black
-        }
-        else
-        {
-            EPD_WriteDispRam(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 1);
-        }
-        // nowtime = millis() - nowtime;
-        EPD_Update();
-        // nowtime = millis() - nowtime;
-
-        // int updatatime = nowtime;
-        // Serial.printf("开始全刷 \n");
-        ReadBusy_long();
-        ReadBusy_long();
-        ReadBusy_long();
-        ReadBusy_long();
-        // nowtime = millis() - nowtime;
-        // Serial.printf("全刷结束，耗时%dms", nowtime - updatatime);
-        if (EPD_Type == DKE29_3COLOR)
-        {
-            // EPD_Transfer_Full_RED((uint8_t *)EPDbuffer,1);
-            EPD_SetRamPointer(xStart / 8, yEnd % 256, yEnd / 256);
-            // Serial.printf("即将写入的是全刷的0x26数据 \n");
-            // EPD_WriteDispRam_Old(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 1);
-            EPD_WriteDispRam_Old(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 1);
-        }
-        else if (EPD_Type == GDEY042Z98 || EPD_Type == HINKE0266A15A0)
-        {
-            EPD_SetRamPointer(xStart / 8, yEnd % 256, yEnd / 256);
-            EPD_WriteDispRam_Old(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 1); //我也不知道啥情况，但是如果你不对这个寄存器写两遍一样的数据局刷无效
-            // EPD_WriteDispRam_Old(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 1);
-        }
-        else
-        {
-            EPD_SetRamPointer(xStart / 8, yEnd % 256, yEnd / 256);
-            EPD_WriteDispRam(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 1);
-        }
+        EPD_WriteDispRam(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 0x00); // white
     }
-
-    else if (EPD_Type == WF29 || EPD_Type == WF58 || EPD_Type == WF29BZ03 || EPD_Type == C154 || EPD_Type == WF42 || EPD_Type == WFT0290CZ10)
+    else if (Label == 3)
     {
-        if(EPD_Type == WFT0290CZ10)
-        {
-            EPD_WriteDispRam_Old(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 0xff);
-        }
-        if (Label == 2)
-        {
-            EPD_WriteDispRam(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 0xff); // white
-        }
-        else if (Label == 3)
-        {
-            EPD_WriteDispRam(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 0x00); // black
-        }
-        else
-        {
-            EPD_WriteDispRam(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 1);
-        }
-        ReadBusy_long();
-        // EPD_WriteDispRam_Old(xDot/8, yDot, (uint8_t *)DisBuffer,0,1);
-        EPD_Update();
-        /*if(EPD_Type==WF32)
-    {
-    WiFi.mode(WIFI_OFF);
-    wifi_fpm_set_sleep_type(LIGHT_SLEEP_T);
-    gpio_pin_wakeup_enable(GPIO_ID_PIN(4), GPIO_PIN_INTR_HILEVEL);
-    wifi_fpm_open();
-    wifi_fpm_do_sleep(0xFFFFFFF);  // only 0xFFFFFFF, any other value and it won't disconnect the RTC timer
-    delay(10);
-    }	*/
-        // ReadBusy_long();
-        // ReadBusy_long();
-        // ReadBusy_long();
-        EPD_WriteDispRam_Old(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 1);
-        ReadBusy_long();
+        EPD_WriteDispRam(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 0xff); // black
     }
+    else
+    {
+        EPD_WriteDispRam(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 1);
+    }
+    // nowtime = millis() - nowtime;
+    EPD_Update();
+    // nowtime = millis() - nowtime;
+
+    // int updatatime = nowtime;
+    // Serial.printf("开始全刷 \n");
+    ReadBusy_long();
+    ReadBusy_long();
+    ReadBusy_long();
+    ReadBusy_long();
+
+    EPD_SetRamPointer(xStart / 8, yEnd % 256, yEnd / 256);
+    EPD_WriteDispRam(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 1);
 }
 
 void EPD_Dis_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t *DisBuffer, uint8_t Label)
 {
-    // EPD.EPD_Dis_Part(16,87,237,399,(uint8_t *)EPD.EPDbuffer,1);
-    if (EPD_Type == OPM42 || EPD_Type == DKE42_3COLOR || EPD_Type == WF42 || EPD_Type == GDEY042Z98)
-    {
-        int temp1 = xStart, temp2 = xEnd;
-        xStart = yStart;
-        xEnd = yEnd;
-        yEnd = yDot - temp1 - 2;
-        yStart = yDot - temp2 - 3;
-    }
+
+    int temp1 = xStart, temp2 = xEnd;
+    xStart = yStart;
+    xEnd = yEnd;
+    yEnd = yDot - temp1 - 2;
+    yStart = yDot - temp2 - 3;
+
     unsigned int Xsize = xEnd - xStart;
     unsigned int Ysize = yEnd - yStart + 1;
     if (Xsize % 8 != 0)
@@ -1745,73 +1547,31 @@ void EPD_Dis_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t *DisBuffer
     }
     Xsize = Xsize / 8;
     unsigned int offset = yStart * xDot / 8 + xStart / 8;
-    if (EPD_Type == WX29 || EPD_Type == OPM42 || EPD_Type == DKE42_3COLOR || EPD_Type == DKE29_3COLOR || EPD_Type == GDEY042Z98 || EPD_Type == HINKE0266A15A0)
-    {
-        unsigned long temp = yStart;
-        yStart = yDot - 1 - yEnd;
-        yEnd = yDot - 1 - temp;
 
-        EPD_SetRamArea(xStart, xEnd, yEnd % 256, yEnd / 256, yStart % 256, yStart / 256);
-        EPD_SetRamPointer(xStart / 8, yEnd % 256, yEnd / 256);
-        if (Label == 2)
-            EPD_WriteDispRam(xEnd - xStart, yEnd - yStart + 1, (uint8_t *)DisBuffer, offset, 0x00);
-        else if (Label == 3)
-            EPD_WriteDispRam(xEnd - xStart, yEnd - yStart + 1, (uint8_t *)DisBuffer, offset, 0xff);
-        else
-            EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)DisBuffer, offset, 1);
+    unsigned long temp = yStart;
+    yStart = yDot - 1 - yEnd;
+    yEnd = yDot - 1 - temp;
 
-        EPD_Update_Part();
-        ReadBusy_long();
-        ReadBusy_long();
-        if (EPD_Type == DKE29_3COLOR)
-        {
-            // Serial.printf("即将写入的是局刷的的0x26数据 \n");
-            EPD_WriteDispRam_Old(Xsize, Ysize, (uint8_t *)DisBuffer, offset, 1);
-        }
-        else if (EPD_Type == GDEY042Z98 )
-        {
+    printf("Xsize:%d,Ysize:%d\n",Xsize,Ysize);
+    EPD_SetRamArea(xStart, xEnd, yEnd % 256, yEnd / 256, yStart % 256, yStart / 256);
+    EPD_SetRamPointer(xStart / 8, yEnd % 256, yEnd / 256);
+    if (Label == 2)
+        EPD_WriteDispRam(xEnd - xStart, yEnd - yStart + 1, (uint8_t *)DisBuffer, offset, 0x00);
+    else if (Label == 3)
+        EPD_WriteDispRam(xEnd - xStart, yEnd - yStart + 1, (uint8_t *)DisBuffer, offset, 0xff);
+    else
+        EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)DisBuffer, offset, 1);
 
-            EPD_WriteDispRam_Old(Xsize, Ysize, (uint8_t *)DisBuffer, offset, 1);
-        }
+    EPD_Update_Part();
+    //TODO 受时间影响有问题。
+    ReadBusy_long();
+    ReadBusy_long();
+    ReadBusy_long();
+    ReadBusy_long();
 
-        else if (EPD_Type == HINKE0266A15A0)
-        {
-            EPD_SetRamPointer(xStart / 8, yEnd % 256, yEnd / 256);
-            EPD_WriteDispRam_Old(Xsize, Ysize, (uint8_t *)DisBuffer, offset, 1);
-        }
-        else if(EPD_Type == OPM42 || EPD_Type == DKE42_3COLOR)
-        {
-            EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)DisBuffer, offset, 1);
-        }
-        else if(EPD_Type == WX29)
-        {
-            EPD_SetRamPointer(xStart / 8, yEnd % 256, yEnd / 256);
-            EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)DisBuffer, offset, 1);
-        }
+    
 
-        // EPD_WriteDispRam_Old(Xsize, Ysize,(uint8_t *)DisBuffer,offset,1);
-    }
-
-    else if (EPD_Type == WF29 || EPD_Type == WF58 || EPD_Type == WF42 || EPD_Type == WFT0290CZ10)
-    {
-
-        EPD_SetRamArea(xStart, xEnd, yStart / 256, yStart % 256, yEnd / 256, yEnd % 256);
-        ReadBusy_long();
-        // EPD_WriteDispRam_Old(Xsize, Ysize, (uint8_t *)DisBuffer,offset,0x00);
-        if (Label == 2)
-            EPD_WriteDispRam(xEnd - xStart, yEnd - yStart + 1, (uint8_t *)DisBuffer, offset, 0xff);
-        else if (Label == 3)
-            EPD_WriteDispRam(xEnd - xStart, yEnd - yStart + 1, (uint8_t *)DisBuffer, offset, 0x00);
-        else
-            EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)DisBuffer, offset, 1);
-
-        EPD_Update_Part();
-        ReadBusy();
-        ReadBusy();
-        ReadBusy();
-        EPD_WriteDispRam_Old(Xsize, Ysize, (uint8_t *)DisBuffer, offset, 1);
-        ReadBusy();
-    }
+    EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)DisBuffer, offset, 1);
 }
 void EPD_Transfer_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t *DisBuffer, uint8_t Label)
 {
@@ -1868,5 +1628,3 @@ void EPD_Transfer_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t *DisB
         // EPD_Update_Part();
     }
 }
-
-

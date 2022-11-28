@@ -38,6 +38,8 @@ extern gpio_num_t BUSY_line ;
 extern gpio_num_t CLK ;
 extern gpio_num_t DIN ;
 
+extern uint8_t fontscale;                ///> 字体缩放，仅支持1，2
+
 enum FONT
 {
   FONT16 = 0,
@@ -91,9 +93,9 @@ void   EPaperDrive(gpio_num_t CS, gpio_num_t RST, gpio_num_t DC, gpio_num_t BUSY
    */
   void deepsleep(void);
 
-  uint8_t fontscale;                ///> 字体缩放，仅支持1，2
+
   uint8_t frame;                    //用于4灰度屏，fram=0,在2bit中的第一个bit中存储图像，frame=1在第二bit种存储图像
-  uint8_t EPDbuffer[400 * 300 / 8]; ///>屏幕图像
+extern uint8_t EPDbuffer[400 * 300 / 8]; ///>屏幕图像
 
 
   /**
@@ -161,15 +163,7 @@ void   EPaperDrive(gpio_num_t CS, gpio_num_t RST, gpio_num_t DC, gpio_num_t BUSY
    *
    * @param fontindex 字体样式，目前仅支持FONT枚举里面的
    */
-  void SetFont(enum FONT fontindex);
 
-  /**
-   * @brief 在图像缓存中画字符串
-   *
-   * @param x 字符串图像开始的x坐标
-   * @param y 字符串图像开始的y坐标
-   * @param code 字符串内容
-   */
   void DrawUTF(int16_t x, int16_t y, char * code);
 
   /**
