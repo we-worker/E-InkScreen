@@ -77,7 +77,8 @@
     "waveform_setting_lut.h": "c",
     "*.ipp": "cpp",
     "freertos.h": "c",
-    "gpio.h": "c"
+    "gpio.h": "c",
+    "examscheduling.h": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM7"

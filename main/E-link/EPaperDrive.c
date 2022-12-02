@@ -125,131 +125,6 @@ void DrawEmptyBox(int x, int y, int w, int h)
     DrawYline(x, x + h, y + w);
 }
 
-/*
-void DrawChart(int x, int y, int w, int c1, int c2, int c3, int c4, int c5, int c6)
-{
-
-    int percent, sum, max_c = 0;
-    sum = c1 + c2 + c3 + c4 + c5 + c6;
-    if (sum == 0)
-        sum = 1;
-    max_c = max(c1, max_c);
-    max_c = max(c2, max_c);
-    max_c = max(c3, max_c);
-    max_c = max(c4, max_c);
-    max_c = max(c5, max_c);
-    max_c = max(c6, max_c);
-    if (max_c == 0)
-        max_c = 1;
-    w = w * sum / (2 * max_c);
-
-    SetFont(FONT12);
-    DrawUTF(x, y, ">0.3um");
-    percent = w * c1 / sum;
-    DrawBox(x + 1, y + 41, percent, 10);
-    SetFont(FONT8);
-    DrawUTF(x + 2, y + 41 + percent, char *(c1));
-
-    SetFont(FONT12);
-    DrawUTF(x + 12, y, ">0.5um");
-    percent = w * c2 / sum;
-    DrawBox(x + 13, y + 41, percent, 10);
-    SetFont(FONT8);
-    DrawUTF(x + 14, y + 41 + percent, char *(c2));
-
-    SetFont(FONT12);
-    DrawUTF(x + 24, y, ">1.0um");
-    percent = w * c3 / sum;
-    DrawBox(x + 25, y + 41, percent, 10);
-    SetFont(FONT8);
-    DrawUTF(x + 26, y + 41 + percent, char *(c3));
-
-    SetFont(FONT12);
-    DrawUTF(x + 36, y, ">2.5um");
-    percent = w * c4 / sum;
-    DrawBox(x + 37, y + 41, percent, 10);
-    SetFont(FONT8);
-    DrawUTF(x + 38, y + 41 + percent, char *(c4));
-
-    SetFont(FONT12);
-    DrawUTF(x + 48, y, ">5.0um");
-    percent = w * c5 / sum;
-    DrawBox(x + 49, y + 41, percent, 10);
-    SetFont(FONT8);
-    DrawUTF(x + 50, y + 41 + percent, char *(c5));
-
-    SetFont(FONT12);
-    DrawUTF(x + 60, y, ">10um");
-    percent = w * c6 / sum;
-    DrawBox(x + 61, y + 41, percent, 10);
-    SetFont(FONT8);
-    DrawUTF(x + 62, y + 41 + percent, char *(c6));
-}
-*/
-void DrawCircleChart(int x, int y, int r, int w, int c1, int c2, int c3)
-{
-    // int sum = c1 + c2 + c3;
-    // if (sum == 0)
-    //     sum = 1;
-    // for (int i = 0; i < 360; i++)
-    // {
-    //     SetPixel(-round(cos(M_PI * i / 180) * r) + x, round(sin(M_PI * i / 180) * r) + y);
-    // }
-
-    // for (int i = 0; i < 360; i++)
-    // {
-    //     SetPixel(-round(cos(M_PI * i / 180) * (r - w)) + x, round(sin(M_PI * i / 180) * (r - w)) + y);
-    // }
-
-    // for (int i = 0; i < c1 * 360 / sum; i++)
-    // {
-    //     for (int j = 0; j < w; j++)
-    //     {
-    //         SetPixel(-round(cos(M_PI * i / 180) * (r - j)) + x, round(sin(M_PI * i / 180) * (r - j)) + y);
-    //     }
-    // }
-
-    // for (int i = (c1 + c2) * 360 / sum - 1; i < (c1 + c2) * 360 / sum; i++)
-    // {
-
-    //     for (int j = 0; j < w; j++)
-    //     {
-    //         SetPixel(-round(cos(M_PI * i / 180) * (r - j)) + x, round(sin(M_PI * i / 180) * (r - j)) + y);
-    //     }
-    // }
-
-    // for (int i = (c1 + c2) * 360 / sum; i < 360; i += 10)
-    // {
-
-    //     for (int j = 0; j < w; j++)
-    //     {
-    //         SetPixel(-round(cos(M_PI * i / 180) * (r - j)) + x, round(sin(M_PI * i / 180) * (r - j)) + y);
-    //     }
-    // }
-
-    // y += 2;
-    // DrawBox(x - r, y + r + 2, 8, 8);
-    // SetFont(FONT12);
-    // DrawUTF(x - r - 2, y + r + 12, "PM1.0");
-    // SetFont(FONT12);
-    // DrawUTF(x - r - 2, y + r + 12 + 30, char *(c1));
-
-    // SetFont(FONT12);
-    // DrawEmptyBox(x - r + 14, y + r + 2, 8, 8);
-    // DrawUTF(x - r + 12, y + r + 12, "PM2.5");
-
-    // SetFont(FONT12);
-    // DrawUTF(x - r + 12, y + r + 12 + 30, char *(c2));
-    // DrawEmptyBox(x - r + 28, y + r + 2, 8, 8);
-    // for (int i = y + r + 2; i < y + r + 2 + 8; i += 2)
-    // {
-    //     DrawYline(x - r + 28, x - r + 28 + 7, i);
-    // }
-    // SetFont(FONT12);
-    // DrawUTF(x - r + 26, y + r + 12, "PM10");
-    // SetFont(FONT12);
-    // DrawUTF(x - r + 26, y + r + 12 + 30, char *(c3));
-}
 int getIcon(int weathercodeindex)
 {
     if (weathercodeindex == 0)
@@ -912,7 +787,7 @@ void EPD_WriteCMD(uint8_t command)
   {
   ReadBusy();
   }   */
-    // ReadBusy();
+    ReadBusy();
     EPD_CS_0;
     EPD_DC_0; // command write
     SPI_Write(command);
@@ -1563,7 +1438,6 @@ void EPD_Dis_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t *DisBuffer
         EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)DisBuffer, offset, 1);
 
     EPD_Update_Part();
-    //TODO 受时间影响有问题。
     ReadBusy_long();
     ReadBusy_long();
     ReadBusy_long();
