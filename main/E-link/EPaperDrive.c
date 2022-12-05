@@ -497,7 +497,7 @@ void DrawUnicodeStr(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_t
     int ymax = yDot;
 
     ymax = xDot;
-    printf("start_Draw_Unicode_str\n");
+    // printf("start_Draw_Unicode_str\n");
 
     CurrentCursor = 0;
     uint8_t sizeofsinglechar;
@@ -585,7 +585,7 @@ void drawXbm(int16_t xMove, int16_t yMove, int16_t width, int16_t height, uint8_
                 if (fontscale == 1)
                 {
                     SetPixel(xMove + y, yMove + x);
-                    printf("写字开始\n");
+                    // printf("写字开始\n");
                     CurrentCursor = x;
                 }
                 if (fontscale == 2)

@@ -8,6 +8,8 @@
 #include "E-link/EPaperDrive.h"
 #include "E-link/FileSystem.h"
 #include "Screens/ExamScheduling.h"
+#include "Screens/Todo.h"
+#include "Wifi/wifi.h"
 
 void app_main(void)
 {
@@ -24,6 +26,8 @@ void app_main(void)
    extern gpio_num_t CLK;
    extern gpio_num_t DIN;
 
+   //初始化wifi
+   wifi_init_all();
 
    EPaperDrive(CS, RST, DC, BUSY_line, CLK, DIN);
 
@@ -34,22 +38,10 @@ void app_main(void)
    EPD_init_Full(); // 全刷初始化，使用全刷波形
 
    ExamSchedue();
-   /* code */
-   // deepsleep();                                          // 让屏幕进入休眠模式
+   // list_add("words=ssssds");
 
-   // for (int i = 0; i < 2; i++)
-   // {
-   //    vTaskDelay(3000 / portTICK_PERIOD_MS);
-   //    EPD_init_Part();
-   //    clearbuffer(); // 清空缓存(全白)
-   //    DrawUTF(26, 0, "这是局部刷新效果显示");
-   //    DrawUTF(46, 0, "1234567890");
-   //    // EPD_Dis_Full((uint8_t *)EPDbuffer, 1); // 将缓存中的图像传给屏幕控制芯片全刷屏幕
-   //    EPD_Dis_Part(0, 100, 0, 300, (uint8_t *)EPDbuffer, 1); // 将缓存中的图像传给屏幕控制芯片局新屏幕
-   // }
 
-   // EPD_Dis_Full((uint8_t *)EPDbuffer, 1); // 将缓存中的图像传给屏幕控制芯片全刷屏幕
 
-   deepsleep(); // 让屏幕进入休眠模式
-                // printf("全刷完毕");
+
+
 }

@@ -20,4 +20,22 @@ void ExamSchedue(){
    // printf("缓存图像绘制完毕，准备全刷 \n");
    DrawYline(26, 150, 130);
    EPD_Dis_Full((uint8_t *)EPDbuffer, 1); // 将缓存中的图像传给屏幕控制芯片全刷屏幕
+
+   deepsleep(); // 让屏幕进入休眠模式
 }
+
+   // deepsleep();                                          // 让屏幕进入休眠模式
+
+   // for (int i = 0; i < 2; i++)
+   // {
+   //    vTaskDelay(3000 / portTICK_PERIOD_MS);
+   //    EPD_init_Part();
+   //    clearbuffer(); // 清空缓存(全白)
+   //    DrawUTF(26, 0, "这是局部刷新效果显示");
+   //    DrawUTF(46, 0, "1234567890");
+   //    // EPD_Dis_Full((uint8_t *)EPDbuffer, 1); // 将缓存中的图像传给屏幕控制芯片全刷屏幕
+   //    EPD_Dis_Part(0, 100, 0, 300, (uint8_t *)EPDbuffer, 1); // 将缓存中的图像传给屏幕控制芯片局新屏幕
+   // }
+
+   // EPD_Dis_Full((uint8_t *)EPDbuffer, 1); // 将缓存中的图像传给屏幕控制芯片全刷屏幕
+

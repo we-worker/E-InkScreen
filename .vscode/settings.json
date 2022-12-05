@@ -78,7 +78,15 @@
     "*.ipp": "cpp",
     "freertos.h": "c",
     "gpio.h": "c",
-    "examscheduling.h": "c"
+    "examscheduling.h": "c",
+    "esp_netif.h": "c",
+    "esp_wifi.h": "c",
+    "nvs_flash.h": "c",
+    "esp_event.h": "c",
+    "esp_log.h": "c",
+    "*.inc": "c",
+    "todo.h": "c",
+    "string.h": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM7"
