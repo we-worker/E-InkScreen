@@ -6,24 +6,89 @@
 #include <string.h>
 #include "Screens\Todo.h"
 
-char index_html[]="<!DOCTYPE html>\
-<html lang=\"en\">\
+char index_html[]=
+"<!DOCTYPE html>\\
+<html>\\
   <head>\
-    <meta charset=\"UTF-8\" />\
-    <title>表单标签</title>\
+    <meta charset=\"utf-8\">\
+    <title>Submit and Clear</title>\
   </head>\
   <body>\
-    <form action=\"/echo\" method=\"post\">\
-      事项：<input name=\"words\" /><br />\
-      <!--登陆按钮-->\
-      <input type=\"submit\" value=\"登录\" />\
+  <div style=\"text-align: center;\">\
+    <form >\
+      <input type=\"text\" name=\"userInput\">\
+      <input type=\"submit\" value=\"Submit\">\
+      <button type=\"button\" onclick=\"clearInput()\">Clear</button>\
     </form>\
-    <form action=\"/echo\" method=\"post\">\
-        <input type=\"submit\" value=\"清空\" />\
-      </form>\
+	 <textarea rows=\"10\" cols=\"50\" readonly></textarea>\
+	</div>\
   </body>\
-</html>";
-
+</html>\
+<style>\
+  input[type=\"text\"] {\
+    width: 200px;\
+    height: 30px;\
+    background-color: #cccccc;\
+    margin: 0 auto;\
+  }\
+  input[type=\"submit\"] {\
+    width: 100px;\
+    height: 30px;\
+    background-color: #4CAF50;\
+  }\
+  button {\
+    width: 100px;\
+    height: 30px;\
+    background-color: #FF5722;\
+  }\
+  .center {\
+  margin: 0 auto;\
+  }\
+}\
+</style>\
+\
+\
+<script>\
+\
+  function clearInput() {\
+    document.querySelector(\"input[type='text']\").value = \"\";\
+\
+\
+    var xhr = new XMLHttpRequest();\
+\
+\
+    xhr.open(\"POST\", \"/submit\");\
+\
+\
+    xhr.setRequestHeader(\"Content-Type\", \"application/x-www-form-urlencoded\");\
+\
+\
+    xhr.send(\"clear\");\
+  }\
+\
+  document.querySelector(\"input[type='submit']\").addEventListener(\"click\", function(event) {\
+\
+    event.preventDefault();\
+\
+\
+    var userInput = document.querySelector(\"input[type='text']\").value;\
+\
+\
+    var xhr = new XMLHttpRequest();\
+\
+\
+    xhr.open(\"POST\", \"/submit\");\
+\
+\
+    xhr.setRequestHeader(\"Content-Type\", \"application/x-www-form-urlencoded\");\
+\
+\
+    xhr.send(userInput);\
+\
+\
+    document.querySelector(\"textarea\").value += userInput + \";\";\
+  });\
+</script>";
 /* An HTTP GET handler */
 static esp_err_t hello_get_handler(httpd_req_t *req)
 {
@@ -115,7 +180,7 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
     char buf[100];
     int ret, remaining = req->content_len;
 
-    while (remaining > 0) {
+    while (remaining > 7) {
         /* Read the data for the request */
         if ((ret = httpd_req_recv(req, buf,
                         MIN(remaining, sizeof(buf)))) <= 0) {
@@ -135,22 +200,18 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
         ESP_LOGI(TAG, "%.*s", ret, buf);
         // printf(buf);
         ESP_LOGI(TAG, "====================================");
-
-        list_add(buf);
+        if(buf[0]=='c' && buf[1]=='l' &&buf[2]=='e')
+            list_clear_all();
+        else
+            list_add(buf);
     }
 
     // End response
-    //TODO:无法完成302转跳，疑似是因为主函数还是再echo中。
-    httpd_resp_send_chunk(req, NULL, 0);
-    httpd_resp_set_status(req, "302 Found");
-    httpd_resp_set_hdr(req, "Location", "/.");
-    httpd_resp_send(req, NULL, 0); // Response body can be empty
-    ESP_LOGI(TAG, "转跳完成");
     return ESP_OK;
 }
 
 static const httpd_uri_t echo = {
-    .uri       = "/echo",
+    .uri       = "/submit",
     .method    = HTTP_POST,
     .handler   = echo_post_handler,
     .user_ctx  = index_html

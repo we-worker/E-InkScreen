@@ -2,3 +2,5 @@
 
 
 void list_add(char *words);
+
+void list_clear_all(void);
