@@ -4,8 +4,9 @@
    extern uint8_t EPDbuffer[400 * 300 / 8];
 
 void ExamSchedue(){
-	clearbuffer();   // 清空缓存(全白)
-   vTaskDelay(1000 / portTICK_PERIOD_MS);
+	EPD_init_Full();       // 全刷初始化，使用全刷波形
+
+   clearbuffer();   // 清空缓存(全白)
    fontscale = 2; // 字体缩放系数(支持1和2,对图片也有效，用完记得重新改成1)
    // SetFont(FONT12);              // 选择字体，具体支持的字体见文档
    DrawUTF(0, 80, "考试安排"); // 绘制字符串
@@ -23,19 +24,4 @@ void ExamSchedue(){
 
    deepsleep(); // 让屏幕进入休眠模式
 }
-
-   // deepsleep();                                          // 让屏幕进入休眠模式
-
-   // for (int i = 0; i < 2; i++)
-   // {
-   //    vTaskDelay(3000 / portTICK_PERIOD_MS);
-   //    EPD_init_Part();
-   //    clearbuffer(); // 清空缓存(全白)
-   //    DrawUTF(26, 0, "这是局部刷新效果显示");
-   //    DrawUTF(46, 0, "1234567890");
-   //    // EPD_Dis_Full((uint8_t *)EPDbuffer, 1); // 将缓存中的图像传给屏幕控制芯片全刷屏幕
-   //    EPD_Dis_Part(0, 100, 0, 300, (uint8_t *)EPDbuffer, 1); // 将缓存中的图像传给屏幕控制芯片局新屏幕
-   // }
-
-   // EPD_Dis_Full((uint8_t *)EPDbuffer, 1); // 将缓存中的图像传给屏幕控制芯片全刷屏幕
 

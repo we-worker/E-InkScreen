@@ -69,7 +69,7 @@ void SPI_Write(uint8_t value)
 {
 
     EPD_CLK_0;
-    // delayMicroseconds(1);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
     for (int i = 0; i < 8; i++)
     {
         // 高位在前发送方式    根据升级器件特性定
@@ -77,9 +77,9 @@ void SPI_Write(uint8_t value)
             EPD_DIN_1;
         else
             EPD_DIN_0;
-        // delayMicroseconds(1);      //等待数据稳定  根据实际时钟调整
+        // vTaskDelay(1 / portTICK_PERIOD_MS); //等待数据稳定  根据实际时钟调整
         EPD_CLK_1; // 上升沿发送数据
-        // delayMicroseconds(1);//CLK高电平保持一段时间 这个可以不需要 根据具体的spi时钟来确定
+        // vTaskDelay(1 / portTICK_PERIOD_MS);//CLK高电平保持一段时间 这个可以不需要 根据具体的spi时钟来确定
         EPD_CLK_0;          // 把时钟拉低实现为下一次上升沿发送数据做准备
         value = value << 1; // 发送数据的位向前移动一位
     }
@@ -729,26 +729,15 @@ void clearbuffer()
 
 bool ReadBusy(void)
 {
-    unsigned long i = 0;
-    for (i = 0; i < 100; i++)
+    while(1)
     {
-        //	println("isEPD_BUSY = %d\r\n",isEPD_CS);
-        if (EPD_Type == WX29 || EPD_Type == OPM42 || EPD_Type == DKE42_3COLOR || EPD_Type == DKE29_3COLOR || EPD_Type == GDEY042Z98 || EPD_Type == HINKE0266A15A0)
+
+        if (READ_EPD_BUSY == 0)
         {
-            if (READ_EPD_BUSY == 0)
-            {
-                // Serial.println("Busy is Low \r\n");
-                return 1;
-            }
+            // Serial.println("Busy is Low \r\n");
+            return 1;
         }
-        if (EPD_Type == WF29 || EPD_Type == WF58 || EPD_Type == WF29BZ03 || EPD_Type == WF42 || EPD_Type == WFT0290CZ10)
-        {
-            if (READ_EPD_BUSY != 0)
-            {
-                // Serial.println("Busy is H \r\n");
-                return 1;
-            }
-        }
+        
         vTaskDelay(2 / portTICK_PERIOD_MS);
         // Serial.println("epd is Busy");
     }
@@ -1241,11 +1230,8 @@ void EPD_Update_Part(void)
 void EPD_init_Full(void)
 {
     EPD_Init();
-#ifdef debug
-    Serial.println("EPD_Initn\n");
-#endif
 
-    EPD_Write((uint8_t *)LUTDefault_full_dke42, sizeof(LUTDefault_full_dke42));
+    EPD_Write((uint8_t *)LUTDefault_full_opm42, sizeof(LUTDefault_full_opm42));
 }
 
 void EPD_init_Part(void)
@@ -1405,7 +1391,7 @@ void EPD_Dis_Full(uint8_t *DisBuffer, uint8_t Label)
     EPD_WriteDispRam(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 1);
 }
 
-void EPD_Dis_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t *DisBuffer, uint8_t Label)
+void EPD_Dis_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t Label)
 {
 
     int temp1 = xStart, temp2 = xEnd;
@@ -1431,11 +1417,11 @@ void EPD_Dis_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t *DisBuffer
     EPD_SetRamArea(xStart, xEnd, yEnd % 256, yEnd / 256, yStart % 256, yStart / 256);
     EPD_SetRamPointer(xStart / 8, yEnd % 256, yEnd / 256);
     if (Label == 2)
-        EPD_WriteDispRam(xEnd - xStart, yEnd - yStart + 1, (uint8_t *)DisBuffer, offset, 0x00);
+        EPD_WriteDispRam(xEnd - xStart, yEnd - yStart + 1, (uint8_t *)EPDbuffer, offset, 0x00);
     else if (Label == 3)
-        EPD_WriteDispRam(xEnd - xStart, yEnd - yStart + 1, (uint8_t *)DisBuffer, offset, 0xff);
+        EPD_WriteDispRam(xEnd - xStart, yEnd - yStart + 1, (uint8_t *)EPDbuffer, offset, 0xff);
     else
-        EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)DisBuffer, offset, 1);
+        EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)EPDbuffer, offset, 1);
 
     EPD_Update_Part();
     ReadBusy_long();
@@ -1445,7 +1431,7 @@ void EPD_Dis_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t *DisBuffer
 
     
 
-    EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)DisBuffer, offset, 1);
+    EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)EPDbuffer, offset, 1);
 }
 void EPD_Transfer_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t *DisBuffer, uint8_t Label)
 {

@@ -128,7 +128,7 @@ extern uint8_t EPDbuffer[400 * 300 / 8]; ///>屏幕图像
    * @param DisBuffer 传入的图像缓存指针
    * @param Label 应该刷的图像，1为传入的缓存；2为全白；3为全黑
    */
-  void EPD_Dis_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t *DisBuffer, uint8_t Label);
+  void EPD_Dis_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t Label);
 
   /**
    * @brief 直接向RAM中写全刷的黑白图片

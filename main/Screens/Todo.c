@@ -41,6 +41,6 @@ void list_add(char *words){
 //    DrawYline(26, 150, 130);
    EPD_Dis_Full((uint8_t *)EPDbuffer, 1); // 将缓存中的图像传给屏幕控制芯片全刷屏幕
 
-   deepsleep(); // 让屏幕进入休眠模式
+   // deepsleep(); // 让屏幕进入休眠模式
 
 }
