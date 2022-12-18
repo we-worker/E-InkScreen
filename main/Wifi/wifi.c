@@ -63,7 +63,7 @@ char index_html[]=
     xhr.setRequestHeader(\"Content-Type\", \"application/x-www-form-urlencoded\");\
 \
 \
-    xhr.send(\"clear\");\
+    xhr.send(encodeURIComponent(\"clear\"));\
   }\
 \
   document.querySelector(\"input[type='submit']\").addEventListener(\"click\", function(event) {\
@@ -83,7 +83,14 @@ char index_html[]=
     xhr.setRequestHeader(\"Content-Type\", \"application/x-www-form-urlencoded\");\
 \
 \
-    xhr.send(userInput);\
+    var ret =false;\
+    for(var i=0;i<userInput.length;i++)\
+      ret=(userInput.charCodeAt(i)>=10000)||ret  ;\
+    if(ret){\
+      xhr.send(userInput);\
+    }else{\
+      xhr.send(encodeURIComponent(userInput));\
+    }\
 \
 \
     document.querySelector(\"textarea\").value += userInput + \";\";\

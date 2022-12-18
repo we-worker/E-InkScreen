@@ -5,6 +5,7 @@ int list_pos=1;
 
 void list_clear_all(){
 	clearbuffer();   // 清空缓存(全白)
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
    list_pos=0;
    EPD_Dis_Full((uint8_t *)EPDbuffer, 1); // 将缓存中的图像传给屏幕控制芯片全刷屏幕
 
