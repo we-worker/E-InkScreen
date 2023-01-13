@@ -441,6 +441,7 @@ extern  int yDot;
 
   int getIcon(int weathercodeindex);
   void SetPixel(int16_t x, int16_t y);
+  void SetPixel2(int16_t x, int16_t y);
   void InversePixel(int16_t x, int16_t y);
   void DrawUTF_wh(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_t *code);
   int UTFtoUNICODE(uint8_t *code);

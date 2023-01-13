@@ -602,99 +602,56 @@ void drawXbm(int16_t xMove, int16_t yMove, int16_t width, int16_t height, uint8_
     }
 }
 
+// void DrawXbm_P(int16_t xMove, int16_t yMove, int16_t width, int16_t height, const uint8_t *xbm)
+// {
+//     int16_t heightInXbm = (height + 7) / 8;
+//     uint8_t Data = 0;
+
+//     for (int16_t x = 0; x < width; x++)
+//     {
+//         for (int16_t y = 0; y < height; y++)
+//         {
+//             if (y & 7)
+//             {
+//                 Data <<= 1; // Move a bit
+//             }
+//             else
+//             { // Read new Data every 8 bit
+//                 Data = *((char *)(xbm + (y / 8) + x * heightInXbm));
+//             }
+//             // if there is a bit draw it
+//             if (((Data & 0x80) >> 7))
+//             {
+//                 SetPixel2(xMove + y, yMove + x);
+//                 CurrentCursor = x;
+//             }
+//         }
+//     }
+// }
 void DrawXbm_P(int16_t xMove, int16_t yMove, int16_t width, int16_t height, const uint8_t *xbm)
 {
-    int16_t heightInXbm = (height + 7) / 8;
-    uint8_t Data = 0;
-    // uint8_t temp[heightInXbm*width];
-    // memcpy_P(temp, xbm, heightInXbm*width);
+    uint8_t Data = *xbm;
 
-    for (int16_t x = 0; x < width; x++)
+    for (int16_t y = 0; y < height; y++)
     {
-        for (int16_t y = 0; y < height; y++)
+        for (int16_t x = 0; x < width; x++)
         {
-            if (y & 7)
+            if ((x + y * width) & 7)
             {
                 Data <<= 1; // Move a bit
             }
             else
-            { // Read new Data every 8 bit
-                Data = *((char *)(xbm + (y / 8) + x * heightInXbm));
+            { // 读取新的8位数据，右移3代表/8.
+                Data = *((char *)(xbm + ((x + y * width) >> 3)));
             }
-            // if there is a bit draw it
+            // 画上一个点
             if (((Data & 0x80) >> 7))
             {
-                if (fontscale == 1)
-                {
-                    SetPixel(xMove + y, yMove + x);
-                    CurrentCursor = x;
-                }
-                if (fontscale == 2)
-                {
-                    SetPixel(xMove + y * 2, yMove + x * 2);
-                    SetPixel(xMove + y * 2 + 1, yMove + x * 2);
-                    SetPixel(xMove + y * 2, yMove + x * 2 + 1);
-                    SetPixel(xMove + y * 2 + 1, yMove + x * 2 + 1);
-                }
-            }
-        }
-    }
-}
-void DrawXbm_p_gray(int16_t xMove, int16_t yMove, int16_t width, int16_t height, const uint8_t *xbm, uint8_t level)
-{
-    int16_t heightInXbm = (height + 1) / 2;
-    uint8_t Data = 0;
-
-    for (int16_t x = 0; x < width; x++)
-    {
-        for (int16_t y = 0; y < height; y++)
-        {
-            if (y % 2 != 0)
-            {
-                Data <<= 4; // Move a bit
-            }
-            else
-            { // Read new Data every 8 bit
-                Data = *((char *)(xbm + (y / 2) + x * heightInXbm));
-            }
-            // if there is a bit draw it
-            if (((Data & 0xf0) >> 4 == level))
-            {
-                SetPixel(xMove + y, yMove + x);
+                SetPixel2(xMove + x, yMove + y);
                 CurrentCursor = x;
             }
         }
     }
-}
-void DrawXbm_spiff_gray(int16_t xMove, int16_t yMove, int16_t width, int16_t height, uint8_t level)
-{
-
-    FILE *f = fopen("/pic.xbm", "r");
-
-    int16_t heightInXbm = (height + 1) / 2;
-    uint8_t Data = 0;
-
-    for (int16_t x = 0; x < width; x++)
-    {
-        for (int16_t y = 0; y < height; y++)
-        {
-            if (y % 2 != 0)
-            {
-                Data <<= 4; // Move a bit
-            }
-            else
-            { // Read new Data every 8 bit
-                Data = ~fgetc(f);
-            }
-            // if there is a bit draw it
-            if (((Data & 0xf0) >> 4 == level))
-            {
-                SetPixel(xMove + y, yMove + x);
-                CurrentCursor = x;
-            }
-        }
-    }
-    fclose(f);
 }
 void SetPixel(int16_t x, int16_t y)
 {
@@ -702,6 +659,15 @@ void SetPixel(int16_t x, int16_t y)
     int16_t temp = x;
     x = y;
     y = yDot - 1 - temp;
+    if (x < xDot && y < yDot)
+        EPDbuffer[x / 8 + y * xDot / 8] &= ~(0x80 >> x % 8);
+}
+void SetPixel2(int16_t x, int16_t y)
+{
+
+    int16_t temp = x;
+    // x = y;
+    y = yDot - 1 - y;
     if (x < xDot && y < yDot)
         EPDbuffer[x / 8 + y * xDot / 8] &= ~(0x80 >> x % 8);
 }
@@ -729,7 +695,7 @@ void clearbuffer()
 
 bool ReadBusy(void)
 {
-    while(1)
+    while (1)
     {
 
         if (READ_EPD_BUSY == 0)
@@ -737,7 +703,7 @@ bool ReadBusy(void)
             // Serial.println("Busy is Low \r\n");
             return 1;
         }
-        
+
         vTaskDelay(2 / portTICK_PERIOD_MS);
         // Serial.println("epd is Busy");
     }
@@ -856,10 +822,10 @@ void EPD_WriteDispRam(unsigned int XSize, unsigned int YSize, uint8_t *Dispbuff,
 
     int i = 0, j = 0;
 
-        ReadBusy();
-        EPD_DC_0; // command write
-        EPD_CS_0;
-        SPI_Write(0x24);
+    ReadBusy();
+    EPD_DC_0; // command write
+    EPD_CS_0;
+    SPI_Write(0x24);
 
     EPD_DC_1; // Data write
 
@@ -1224,14 +1190,14 @@ void EPD_Update(void)
 }
 void EPD_Update_Part(void)
 {
-        EPD_WriteCMD(0x20);
+    EPD_WriteCMD(0x20);
 }
 
 void EPD_init_Full(void)
 {
     EPD_Init();
 
-    EPD_Write((uint8_t *)LUTDefault_full_opm42, sizeof(LUTDefault_full_opm42));
+    EPD_Write((uint8_t *)LUTDefault_full_dke42, sizeof(LUTDefault_full_dke42));
 }
 
 void EPD_init_Part(void)
@@ -1384,8 +1350,6 @@ void EPD_Dis_Full(uint8_t *DisBuffer, uint8_t Label)
     // Serial.printf("开始全刷 \n");
     ReadBusy_long();
     ReadBusy_long();
-    ReadBusy_long();
-    ReadBusy_long();
 
     EPD_SetRamPointer(xStart / 8, yEnd % 256, yEnd / 256);
     EPD_WriteDispRam(xDot / 8, yDot, (uint8_t *)DisBuffer, 0, 1);
@@ -1413,7 +1377,7 @@ void EPD_Dis_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t Label)
     yStart = yDot - 1 - yEnd;
     yEnd = yDot - 1 - temp;
 
-    printf("Xsize:%d,Ysize:%d\n",Xsize,Ysize);
+    printf("Xsize:%d,Ysize:%d\n", Xsize, Ysize);
     EPD_SetRamArea(xStart, xEnd, yEnd % 256, yEnd / 256, yStart % 256, yStart / 256);
     EPD_SetRamPointer(xStart / 8, yEnd % 256, yEnd / 256);
     if (Label == 2)
@@ -1428,8 +1392,6 @@ void EPD_Dis_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t Label)
     ReadBusy_long();
     ReadBusy_long();
     ReadBusy_long();
-
-    
 
     EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)EPDbuffer, offset, 1);
 }

@@ -12,8 +12,8 @@
 #define AP_MAX_STA_CONN		4
 
 // 路由器wifi名称 密码
-#define STA_WIFI_SSID		"life_in_nbu2G"
-#define STA_WIFI_PASS		"nbu12345"
+#define STA_WIFI_SSID		"h3c_wifi"
+#define STA_WIFI_PASS		"h3c_wifi"
 
 static const char *TAG = "EWIFI";
 
