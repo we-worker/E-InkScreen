@@ -187,7 +187,7 @@ extern uint8_t EPDbuffer[400 * 300 / 8]; ///>屏幕图像
    * @param strlength 字符串的长度
    * @param code 字符串指针
    */
-  void DrawUnicodeStr(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_t strlength, uint8_t *code);
+  void DrawUnicodeStr(int16_t x, int16_t y, uint8_t width, uint8_t height, uint16_t strlength, uint8_t *code);
 
   /**
    * @brief 清除之前所绘的图像缓存

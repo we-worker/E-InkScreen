@@ -36,12 +36,7 @@ static esp_err_t hello_get_handler(httpd_req_t *req)
     const char *resp_str = (const char *)req->user_ctx;
     httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
 
-    /* After sending the HTTP response the old HTTP request
-     * headers are lost. Check if HTTP request headers can be read now. */
-    // if (httpd_req_get_hdr_value_len(req, "Host") == 0)
-    // {
-    //     ESP_LOGI(TAG, "Request headers lost");
-    // }
+
     return ESP_OK;
 }
 
@@ -49,8 +44,6 @@ static const httpd_uri_t hello = {
     .uri = "/",
     .method = HTTP_GET,
     .handler = hello_get_handler,
-    /* Let's pass response string in user
-     * context to demonstrate it's usage */
     .user_ctx = index_html
 
 };
@@ -59,13 +52,9 @@ DMA_ATTR  uint8_t image_data[400 * 300 / 8] = {0};
 uint16_t image_data_p = 0;
 int8_t image_count = 0;
 /* An HTTP POST handler */
-// char *buf = (char *) malloc(1500);
     char buf[2010];//不知道为什么只能用全局变量了，局部变量的栈用完了。
 static  esp_err_t echo_post_handler(httpd_req_t *req)
 {
-    // printf("post_get\n");
-    // char *buf ;
-    // buf= malloc(6010);
     int ret, remaining = req->content_len;
     // printf("remaining:%d\n", remaining);
     while (remaining > 7)
@@ -96,25 +85,10 @@ static  esp_err_t echo_post_handler(httpd_req_t *req)
         {
             for (uint16_t i = 6; i < 2000 + 6; i += 2)
             {
-                if (buf[i] >= 'a' && buf[i] <= 'f')
-                {
-                    image_data[image_data_p] = buf[i] - 'a' + 10;
-                }
-                else if (buf[i] >= '0' && buf[i] <= '9')
-                {
-                    image_data[image_data_p] = buf[i] - '0';
-                }
-                if (buf[i + 1] >= 'a' && buf[i + 1] <= 'f')
-                {
-                    image_data[image_data_p] = image_data[image_data_p] * 16 + buf[i + 1] - 'a' + 10;
-                }
-                else if (buf[i + 1] >= '0' && buf[i + 1] <= '9')
-                {
-                    image_data[image_data_p] = image_data[image_data_p] * 16 + buf[i + 1] - '0';
-                }
+                // 字符串转成真正的16进制数保存
+                image_data[image_data_p] = (buf[i] > '9' ? buf[i] - 'a' + 10 : buf[i] - '0') * 16 + (buf[i + 1] > '9' ? buf[i + 1] - 'a' + 10 : buf[i + 1] - '0');
                 image_data_p += 1;
             }
-            // printf("after init wifi : free_heap_size = %d\n", esp_get_free_heap_size());
             image_count += 1;
 
             printf("image_count:%d\n",image_count);
@@ -132,8 +106,6 @@ static  esp_err_t echo_post_handler(httpd_req_t *req)
         else
             list_add(buf);
     }
-    // free(buf);
-    // End response
     return ESP_OK;
 }
 
@@ -264,7 +236,7 @@ void wifi_init_softap(void)
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
-
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     wifi_config_t cfg1 = {
         .sta = {
             .ssid = STA_WIFI_SSID,
@@ -302,8 +274,8 @@ void wifi_init_all(void)
 
     // Initialize Wi-Fi including netif with default config
     _esp_netif_ap = esp_netif_create_default_wifi_ap();
-    _esp_netif_sta = esp_netif_create_default_wifi_sta();
 
+    _esp_netif_sta = esp_netif_create_default_wifi_sta();
     // Initialise ESP32 in SoftAP mode
     wifi_init_softap();
 

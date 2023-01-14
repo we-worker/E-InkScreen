@@ -7,6 +7,7 @@ set(srcs "hello_world_main.c"
 "Wifi/wifi.c"
 "Wifi/"
 "Screens/Todo.c"
+"Wifi/httpGet.c"
 )
 
 idf_component_register(SRCS ${srcs} 

@@ -85,29 +85,7 @@ void SPI_Write(uint8_t value)
     }
 }
 
-/*
-void DrawCircle(int x, int y, int r, bool fill)
-{
-    if (fill == 0)
-    {
-        for (int i = 0; i < 360; i++)
-        {
-            SetPixel(round(cos(i) * r + x), round(sin(i) * r) + y);
-        }
-    }
-    else
-    {
-        for (int j = 0; j < r; j++)
-        {
 
-            for (int i = 0; i < 360; i++)
-            {
-                SetPixel(std::round(cos(i) * j + x), round(sin(i) * j) + y);
-            }
-        }
-    }
-}
-*/
 
 void DrawBox(uint8_t x, int y, int w, int h)
 {
@@ -403,8 +381,6 @@ void DrawUTF_wh(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_t *co
 }
 void DrawUTF(int16_t x, int16_t y, char *code)
 {
-    // char * buffer=code;
-    // code.toCharArray(buffer, 200);
     DrawUTF_wh(x, y, fontwidth, fontheight, (uint8_t *)code);
 }
 int UTFtoUNICODE(uint8_t *code)
@@ -466,7 +442,7 @@ void DrawUnicodeChar(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_
     else
         sizeofsinglechar = (height / 8 + 1) * width;
     offset = (code[0] * 0x100 + code[1]) * sizeofsinglechar;
-    // TODO
+
     FILE *f = fopen(fontname, "r");
     if (f == NULL)
     {
@@ -492,7 +468,7 @@ void DrawUnicodeChar(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_
     // SPIFFS.end();
 }
 
-void DrawUnicodeStr(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_t strlength, uint8_t *code)
+void DrawUnicodeStr(int16_t x, int16_t y, uint8_t width, uint8_t height, uint16_t strlength, uint8_t *code)
 {
     int ymax = yDot;
 
@@ -515,12 +491,12 @@ void DrawUnicodeStr(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_t
         offset = (code[i] * 0x100 + code[i + 1]) * sizeofsinglechar;
         if (offset < 0xff * sizeofsinglechar && fontscale == 1)
         {
-
+            // printf("code[i]:%c,code[i+1]:%c\n",code[i],code[i+1]);
             DrawUnicodeChar(x + xmove, y + ymove, width, height, (uint8_t *)code + i);
             ymove += CurrentCursor + 1;
-            if ((y + ymove + width / 2) >= ymax - 1)
+            if ((y + ymove + width / 2) >= ymax - 1 || code[i+1]=='\n')
             {
-                xmove += height + 1;
+                xmove += height + 4;
                 ymove = 0;
                 CurrentCursor = 0;
             }
@@ -529,7 +505,7 @@ void DrawUnicodeStr(int16_t x, int16_t y, uint8_t width, uint8_t height, uint8_t
         {
             DrawUnicodeChar(x + xmove, y + ymove, width, height, (uint8_t *)code + i);
             ymove += CurrentCursor + 2;
-            if ((y + ymove + width) >= ymax - 1)
+            if ((y + ymove + width) >= ymax - 1|| code[i+1]=='\n')
             {
                 xmove += height + 1;
                 ymove = 0;
