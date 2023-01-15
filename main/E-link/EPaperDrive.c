@@ -1129,39 +1129,12 @@ void EPD_Set_Contrast(uint8_t vcom)
 
 void EPD_Update(void)
 {
-    if (EPD_Type == OPM42)
-    {
-        EPD_WriteCMD(0x20);
-    }
+  
     if (EPD_Type == DKE42_3COLOR)
     {
         EPD_WriteCMD(0x22); // Display Update Control
         EPD_WriteData(0xC7);
         EPD_WriteCMD(0x20); // Activate Display Update Sequence
-    }
-    if (EPD_Type == WX29)
-    {
-        EPD_WriteCMD_p1(0x22, 0x04);
-        EPD_WriteCMD(0x20);
-    }
-    if (EPD_Type == WF29 || EPD_Type == WF58 || EPD_Type == WF29BZ03 || EPD_Type == C154 || EPD_Type == WF42 || EPD_Type == WFT0290CZ10)
-    {
-        EPD_WriteCMD(0x12);
-        ReadBusy();
-    }
-    if (EPD_Type == DKE29_3COLOR)
-    {
-        EPD_WriteCMD(0x22); // Display Update Control
-        EPD_WriteData(0xc7);
-        EPD_WriteCMD(0x20); // Activate Display Update Sequence
-        ReadBusy();
-    }
-    else if (EPD_Type == GDEY042Z98 || EPD_Type == HINKE0266A15A0)
-    {
-        EPD_WriteCMD(0x22); // Display Update Control
-        EPD_WriteData(0xC7);
-        EPD_WriteCMD(0x20); // Activate Display Update Sequence
-        ReadBusy();
     }
 }
 void EPD_Update_Part(void)
@@ -1333,6 +1306,7 @@ void EPD_Dis_Full(uint8_t *DisBuffer, uint8_t Label)
 
 void EPD_Dis_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t Label)
 {
+    // 局部刷新请将Label=0，待优化
 
     int temp1 = xStart, temp2 = xEnd;
     xStart = yStart;
@@ -1363,13 +1337,11 @@ void EPD_Dis_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t Label)
     else
         EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)EPDbuffer, offset, 1);
 
+    ReadBusy_long();
     EPD_Update_Part();
     ReadBusy_long();
-    ReadBusy_long();
-    ReadBusy_long();
-    ReadBusy_long();
 
-    EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)EPDbuffer, offset, 1);
+    // EPD_WriteDispRam(Xsize, Ysize, (uint8_t *)EPDbuffer, offset, 1);
 }
 void EPD_Transfer_Part(int xStart, int xEnd, int yStart, int yEnd, uint8_t *DisBuffer, uint8_t Label)
 {

@@ -5,8 +5,6 @@
 
 void ExamSchedue(){
 	EPD_init_Full();                       // 全刷初始化，使用全刷波形
-   
-   vTaskDelay(3000 / portTICK_PERIOD_MS);
 
    clearbuffer();   // 清空缓存(全白)
    fontscale = 2; // 字体缩放系数(支持1和2,对图片也有效，用完记得重新改成1)

@@ -96,11 +96,12 @@ static  esp_err_t echo_post_handler(httpd_req_t *req)
             {
                 image_count = 0;
                 image_data_p = 0;
-
+                EPD_init_Full();                       // 全刷初始化，使用全刷波形
+                clearbuffer();   // 清空缓存(全白)
                 DrawXbm_P(0, 0, 400, 300, (uint8_t *)image_data);
 
                 EPD_Dis_Full((uint8_t *)EPDbuffer, 1); // 将缓存中的图像传给屏幕控制芯片全刷屏幕
-                clearbuffer();   // 清空缓存(全白)
+                // clearbuffer();   // 清空缓存(全白)
             }
         }
         else

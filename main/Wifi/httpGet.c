@@ -93,8 +93,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 
 void show_news(char *words){
 
-//    EPD_init_Part();
-	// clearbuffer();   // 清空缓存(全白)
+	EPD_init_Full();                       // 全刷初始化，使用全刷波形
+	clearbuffer();   // 清空缓存(全白)
 	fontscale = 2;
 	DrawUTF(0, 115, "睡前消息列表");
    DrawXline(0, 400, 40);

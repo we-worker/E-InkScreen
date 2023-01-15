@@ -87,7 +87,9 @@
     "*.inc": "c",
     "todo.h": "c",
     "string.h": "c",
-    "wifi.h": "c"
+    "wifi.h": "c",
+    "memu.h": "c",
+    "httpget.h": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM7"

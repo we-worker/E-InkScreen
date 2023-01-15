@@ -11,6 +11,7 @@
 #include "Screens/Todo.h"
 #include "Wifi/wifi.h"
 #include "Wifi/httpGet.h"
+#include "Screens/memu.h"
 
 
 void app_main(void)
@@ -32,28 +33,13 @@ void app_main(void)
       EPaperDrive(CS, RST, DC, BUSY_line, CLK, DIN);
       LittlefsBegin();
      // ExamSchedue();
-	EPD_init_Full();                       // 全刷初始化，使用全刷波形
-      vTaskDelay(3000 / portTICK_PERIOD_MS);
-         extern uint8_t fontscale;
-         fontscale=1;
-          clearbuffer();   // 清空缓存(全白)
+	// EPD_init_Full();                       // 全刷初始化，使用全刷波形
+      // vTaskDelay(3000 / portTICK_PERIOD_MS);
+      //    extern uint8_t fontscale;
+      //    fontscale=1;
+      //     clearbuffer();   // 清空缓存(全白)
 
       get_news();
-
-      //    EPD_Dis_Full((uint8_t *)image_data, 1); // 将缓存中的图像传给屏幕控制芯片全刷屏幕
-      // for (int i = 0; i < 3; i++)
-      // {
-
-
-      // vTaskDelay(10000 / portTICK_PERIOD_MS);
-      // //模式切换时，需要多等一会几秒完全刷新好才行。
-      // EPD_init_Part();
-      // clearbuffer(); // 清空缓存(全白)
-      // DrawUTF(26, 0, "这是局部刷新效果显示");         
-      // DrawUTF(46, 0, "1234567890");    
-      // // vTaskDelay(3000 / portTICK_PERIOD_MS);
-      // EPD_Dis_Part(0, 100, 0, 300, 1); // 将缓存中的图像传给屏幕控制芯片局新屏幕
-      // deepsleep();
-      // vTaskDelay(3000 / portTICK_PERIOD_MS);
-      // }
+      // main_memu();
+      xTaskCreate(Read_keys, "button_task", 2048, NULL, 10, NULL);
 }
