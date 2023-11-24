@@ -2,6 +2,7 @@
 #include "driver/gpio.h"
 #include "ExamScheduling.h"
 #include "Wifi/httpGet.h"
+#include "Wifi/wifi.h"
 
 uint8_t cursor_index=1;
 uint8_t Screen_Mode=1;//1为主菜单
@@ -17,6 +18,7 @@ void memu_cursor(){
 
 void main_memu(){
 	EPD_init_Full();                       // 全刷初始化，使用全刷波形
+	vTaskDelay(1000 / portTICK_PERIOD_MS);
 	clearbuffer();   // 清空缓存(全白)
 		fontscale = 2;
 	DrawUTF(10, 150, "主菜单");
@@ -24,6 +26,9 @@ void main_memu(){
 	DrawUTF(109, 100, "考试安排");
 	DrawUTF(159, 100, "图片显示");
 	DrawUTF(209, 100, "每日新闻");
+	extern char ip_addr[16];
+	DrawUTF(250, 100, "IP:");
+	DrawUTF(250, 130, ip_addr);
     EPD_Dis_Full((uint8_t *)EPDbuffer, 1); // 将缓存中的图像传给屏幕控制芯片全刷屏幕
 
    deepsleep(); // 让屏幕进入休眠模式

@@ -39,7 +39,8 @@ void app_main(void)
       //    fontscale=1;
       //     clearbuffer();   // 清空缓存(全白)
 
-      get_news();
-      // main_memu();
+      //get_news();
+      
+      main_memu();
       xTaskCreate(Read_keys, "button_task", 2048, NULL, 10, NULL);
 }

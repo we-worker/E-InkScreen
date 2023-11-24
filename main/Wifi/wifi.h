@@ -12,8 +12,8 @@
 #define AP_MAX_STA_CONN		4
 
 // 路由器wifi名称 密码
-#define STA_WIFI_SSID		"h3c_wifi"
-#define STA_WIFI_PASS		"h3c_wifi"
+#define STA_WIFI_SSID		"life_in_nbu2G"
+#define STA_WIFI_PASS		"nbu12345"
 
 static const char *TAG = "EWIFI";
 
@@ -29,3 +29,5 @@ static void got_ip_handler(void* arg, esp_event_base_t event_base, int32_t event
 void wifi_init_softap(void);
 
 void wifi_init_all(void);
+
+extern char ip_addr[16];

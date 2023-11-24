@@ -89,8 +89,10 @@
     "string.h": "c",
     "wifi.h": "c",
     "memu.h": "c",
-    "httpget.h": "c"
+    "httpget.h": "c",
+    "stdlib.h": "c",
+    "esp32_mock.h": "c"
   },
   "idf.flashType": "UART",
-  "idf.portWin": "COM7"
+  "idf.portWin": "COM3"
 }

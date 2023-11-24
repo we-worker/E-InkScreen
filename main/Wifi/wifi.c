@@ -7,7 +7,7 @@
 #include "Screens\Todo.h"
 #include "webSite.h"
 
-
+char ip_addr[16];
 static httpd_handle_t start_webserver(void);
 static void stop_webserver(httpd_handle_t server);
 
@@ -187,6 +187,7 @@ static void connect_handler(void *arg, esp_event_base_t event_base,
 
 void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
     {
+        printf("=============================================");
     if (event_id == WIFI_EVENT_AP_STACONNECTED)
     {
         wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
@@ -198,7 +199,19 @@ void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
         wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
         ESP_LOGI(TAG, "station " MACSTR " leave, AID=%d",
                  MAC2STR(event->mac), event->aid);
+    }else if (event_id == IP_EVENT_STA_GOT_IP) {
+    
+        printf("=============================================");
     }
+        ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+        esp_netif_t *netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+        esp_netif_ip_info_t ip_info;
+        esp_netif_get_ip_info(netif, &ip_info);
+        inet_ntoa_r(ip_info.ip, ip_addr, sizeof(ip_addr));
+        ESP_LOGI(TAG, "Got IP address: %s", ip_addr);
+    
+
+
 }
 
 void sta_start_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
@@ -221,7 +234,7 @@ void wifi_init_softap(void)
 {
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
+    ESP_ERROR_CHECK(esp_event_loop_init(wifi_event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
 
     wifi_config_t wifi_config = {
@@ -250,14 +263,16 @@ void wifi_init_softap(void)
     };
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &cfg1));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_START, sta_start_handler, NULL));
+    // ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, IP_EVENT_STA_GOT_IP, &got_ip_handler, NULL));
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    esp_netif_ip_info_t ip_info;
-    esp_netif_get_ip_info(esp_netif_get_handle_from_ifkey("WIFI_AP_DEF"), &ip_info);
-
-    char ip_addr[16];
-    inet_ntoa_r(ip_info.ip.addr, ip_addr, 16);
-    ESP_LOGI(TAG, "Set up softAP with IP: %s", ip_addr);
+    // esp_netif_ip_info_t ip_info;
+    // esp_netif_get_ip_info(esp_netif_get_handle_from_ifkey("WIFI_AP_DEF"), &ip_info);
+    
+    
+    // inet_ntoa_r(ip_info.ip.addr, ip_addr, 16);
+    // ESP_LOGI(TAG, "Set up softAP with IP: %s", ip_addr);
 
     ESP_LOGI(TAG, "wifi_init_softap finished. SSID:'%s' password:'%s'", AP_WIFI_SSID, AP_WIFI_PASS);
 }
@@ -291,5 +306,11 @@ void wifi_init_all(void)
 
     static httpd_handle_t server = NULL;
     server = start_webserver();
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
+
+
+                // 连接成功事件
+    tcpip_adapter_ip_info_t ip_info;
+    tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_MAX, &ip_info);
+   printf("STA IP Address: %s\n", ip4addr_ntoa(&dnsserver));
+    
 }

@@ -113,7 +113,7 @@ void show_news(char *words){
 
 void get_news()
 {
-	char local_response_buffer[2048] = {0};
+	char local_response_buffer[3048] = {0};
 
 
 	esp_http_client_config_t config = {

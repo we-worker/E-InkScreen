@@ -397,9 +397,6 @@ int UTFtoUNICODE(uint8_t *code)
 
             UNICODEbuffer[charcount * 2] = 0x00;
             UNICODEbuffer[charcount * 2 + 1] = code[i];
-            // Serial.println("english or number");
-            // Serial.println(UNICODEbuffer[charcount*2],HEX);
-            //  Serial.println(UNICODEbuffer[charcount*2+1],HEX);
             i++;
             charcount++;
         }
@@ -714,10 +711,7 @@ bool ReadBusy_long(void)
 }
 void EPD_WriteCMD(uint8_t command)
 {
-    /*if(EPD_Type==WX29||EPD_Type==OPM42||EPD_Type==DKE42_3COLOR||EPD_Type==DKE29_3COLOR)
-  {
-  ReadBusy();
-  }   */
+
     ReadBusy();
     EPD_CS_0;
     EPD_DC_0; // command write
@@ -1078,45 +1072,45 @@ void EPD_Init(void)
     EPD_RST_1;
 
     printf("初始化DKE42_3COLOR\n");
-    EPD_WriteCMD(0x74);  //
+    EPD_WriteCMD(0x74);  //模拟参数
     EPD_WriteData(0x54); //
-    EPD_WriteCMD(0x7E);  //
+    EPD_WriteCMD(0x7E);  //数字参数
     EPD_WriteData(0x3B); //
-    EPD_WriteCMD(0x01);  //
+    EPD_WriteCMD(0x01);  // 门驱动器参数
     EPD_WriteData(0x2B); //
     EPD_WriteData(0x01);
     EPD_WriteData(0x00); //
 
-    EPD_WriteCMD(0x0C);  //
+    EPD_WriteCMD(0x0C);  //软启动
     EPD_WriteData(0x8B); //
     EPD_WriteData(0x9C); //
     EPD_WriteData(0xD6); //
     EPD_WriteData(0x0F); //
 
-    EPD_WriteCMD(0x3A);  //
+    EPD_WriteCMD(0x3A);  //墨水屏的假线周期
     EPD_WriteData(0x21); //
-    EPD_WriteCMD(0x3B);  //
+    EPD_WriteCMD(0x3B);  //门线宽度
     EPD_WriteData(0x06); //
-    EPD_WriteCMD(0x3C);  //
+    EPD_WriteCMD(0x3C);  //边界驱动电压
     EPD_WriteData(0x03); //
 
-    EPD_WriteCMD(0x11);  // data enter mode
+    EPD_WriteCMD(0x11);  // 数据输入的顺序
     EPD_WriteData(0x01); // 01 –Y decrement, X increment,
 
-    EPD_WriteCMD(0x2C);  //
-    EPD_WriteData(0x00); // fff
+    EPD_WriteCMD(0x2C);  //设置墨水屏的中间电压（VCOM）
+    EPD_WriteData(0x00); // 
 
-    EPD_WriteCMD(0x37);  //
+    EPD_WriteCMD(0x37);  //用于写入OTP选择。
     EPD_WriteData(0x00); //
     EPD_WriteData(0x00); //
     EPD_WriteData(0x00); //
     EPD_WriteData(0x00); //
     EPD_WriteData(0x80); //
 
-    EPD_WriteCMD(0x21);  //
+    EPD_WriteCMD(0x21);  //命令用于控制显示更新
     EPD_WriteData(0x40); //
-    EPD_WriteCMD(0x22);
-    EPD_WriteData(0xc7); // c5forgraymode//
+    EPD_WriteCMD(0x22);  //Display Update Control
+    EPD_WriteData(0xc7); // 
 }
 void EPD_Set_Contrast(uint8_t vcom)
 {
@@ -1138,7 +1132,7 @@ void EPD_Update(void)
     }
 }
 void EPD_Update_Part(void)
-{
+{EPD_WriteCMD(0x22); // Display Update Control
     EPD_WriteCMD(0x20);
 }
 
